@@ -13,3 +13,5 @@ coverage.xml
 test.db
 log.txt
 Pipfile.lock
+docs
+tests
