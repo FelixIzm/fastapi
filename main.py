@@ -1,4 +1,10 @@
 ﻿from fastapi import FastAPI
+import requests, base64, json
+import urllib.parse
+from string import Template
+from datetime import datetime
+import os
+
 
 app = FastAPI()
 
