@@ -179,9 +179,9 @@ def getContent(military_unit, date_From, date_To):
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return ({"Hello": "World"},status_code=200)
 
-
+#https://api-1945.herokuapp.com/items?documents&unit=147%20сд&de_from=555$d_to=4444
 @app.get("/items/{app_type}")
 async def read_item(app_type: str, unit: str = None, last_name: str = None, d_from: str = None, d_to: str = None):
     stat = ''
