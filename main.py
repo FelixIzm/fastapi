@@ -4,12 +4,15 @@ import urllib.parse,pprint
 from string import Template
 from datetime import datetime
 import os
+from flask_cors import CORS, cross_origin
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 app = FastAPI()
 
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 cookies = {}
 headers={}
@@ -178,8 +181,9 @@ def getContent(military_unit, date_From, date_To):
 
 
 @app.get("/")
+@cross_origin()
 async def read_root():
-    return ({"Hello": "World"},status_code=200,headers={'Access-Control-Allow-Origin': '*'})
+    return {"Hello": "World"}
 
 #https://api-1945.herokuapp.com/items?documents&unit=147%20сд&de_from=555$d_to=4444
 @app.get("/items/{app_type}")
