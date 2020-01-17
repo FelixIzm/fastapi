@@ -179,7 +179,7 @@ def getContent(military_unit, date_From, date_To):
 
 @app.get("/")
 async def read_root():
-    return ({"Hello": "World"},status_code=200)
+    return ({"Hello": "World"},status_code=200,headers={'Access-Control-Allow-Origin': '*'})
 
 #https://api-1945.herokuapp.com/items?documents&unit=147%20сд&de_from=555$d_to=4444
 @app.get("/items/{app_type}")
