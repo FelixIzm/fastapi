@@ -1,5 +1,5 @@
-﻿from fastapi import FastAPI, Response
-from fastapi.responses import HTMLResponse
+﻿from starlette import FastAPI, Response
+from starlette.responses import HTMLResponse
 import requests, base64, json
 import urllib.parse,pprint
 from string import Template
