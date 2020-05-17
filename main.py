@@ -1,10 +1,15 @@
-﻿from fastapi import FastAPI
+﻿from fastapi import FastAPI, Response
+from fastapi.responses import HTMLResponse
 import requests, base64, json
 import urllib.parse,pprint
 from string import Template
 from datetime import datetime
 import os
 from flask_cors import CORS, cross_origin
+import zipfile
+import csv
+import io
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,6 +50,66 @@ def make_str_cookie(cookies):
     return str_cook
 #####################################
 
+
+#####################################
+#            MAIN!!!!!!!!!!         #
+#####################################
+def local_main1(image_id):
+    if(image_id == None):
+        return 'Ссылка на каталог -', ''
+    info_url = 'https://obd-memorial.ru/html/info.htm?id={}'.format(image_id)
+    img_info = 'https://obd-memorial.ru/html/getimageinfo?id={}'.format(image_id)
+    res1 = requests.get(info_url, allow_redirects = True)
+
+    in_memory = BytesIO()
+    zipObj = ZipFile(in_memory, "a", zipfile.ZIP_DEFLATED)
+    print(res1.status_code)
+    if(res1.status_code==200):
+        if(not '3fbe47cd30daea60fc16041479413da2' in res1.cookies):
+            return 'no folder','Запись сводного документа не найдена' 
+        cookies = {}
+        cookies['3fbe47cd30daea60fc16041479413da2']=res1.cookies['3fbe47cd30daea60fc16041479413da2']
+        cookies['JSESSIONID']=res1.cookies['JSESSIONID']
+        #############################
+        #   load list id's images   #
+        #############################
+        response = requests.get(img_info,cookies=cookies)
+        response_dict = json.loads(response.text)
+        print('response_dict = '+str(len(response_dict)))
+        #############################
+        #if(excel):
+        columns = cols
+        row_csv = []
+        output = io.StringIO()
+
+        ##############################
+        writer = csv.writer(output, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+        for col_num, column_title in enumerate(cols, 1):
+            row_csv.append(column_title)
+        writer.writerow(row_csv)
+        # идем по списку id сканов
+        i = 0
+        for item in response_dict:
+            i=+1
+            print(i)
+            #if(excel):
+            for id in item['mapData'].keys():
+                row = get_info(item['id'],id,cookies)
+                row_csv = []
+                for col_num, cell_value in enumerate(row, 1):
+                    row_csv.append(cell_value)
+                writer.writerow(row_csv)
+
+        zipObj.writestr(str(image_id)+'_book.csv', output.getvalue())
+        # fix for Linux zip files read in Windows
+        for file in zipObj.filelist:
+            file.create_system = 0
+    zipObj.close()
+    in_memory.seek(0)    
+    return Response(content=in_memory.read(), media_type="application/zip" )
+
+#####################################################
+
 def getContent(military_unit, date_From, date_To):
     ##############################################
     #    Первый запрос - получаем 307 статус     #
@@ -60,7 +125,52 @@ def getContent(military_unit, date_From, date_To):
         #print(res1.cookies[str_00])
         # Получили переменные из кук
         cookie_PNSESSIONID = res1.cookies['PNSESSIONID']
-        cookie_00 = res1.cookies[str_00]
+        cookie_00 = res1.cookies[str_00]#####################################
+#            MAIN!!!!!!!!!!         #
+#####################################
+def local_main(image_id):
+    if(image_id == None):
+        return 'Ссылка на каталог -', ''
+    info_url = 'https://obd-memorial.ru/html/info.htm?id={}'.format(image_id)
+    img_info = 'https://obd-memorial.ru/html/getimageinfo?id={}'.format(image_id)
+    res1 = requests.get(info_url, allow_redirects = True)
+
+    in_memory = BytesIO()
+    zipObj = ZipFile(in_memory, "a", zipfile.ZIP_DEFLATED)
+    print(res1.status_code)
+    if(res1.status_code==200):
+        if(not '3fbe47cd30daea60fc16041479413da2' in res1.cookies):
+            return 'no folder','Запись сводного документа не найдена' 
+        cookies = {}
+        cookies['3fbe47cd30daea60fc16041479413da2']=res1.cookies['3fbe47cd30daea60fc16041479413da2']
+        cookies['JSESSIONID']=res1.cookies['JSESSIONID']
+        #############################
+        #   load list id's images   #
+        #############################
+        response = requests.get(img_info,cookies=cookies)
+        response_dict = json.loads(response.text)
+        print('response_dict = '+str(len(response_dict)))
+        #############################
+        #if(excel):
+        columns = cols
+        row_csv = []
+        output = io.StringIO()
+
+        ##############################
+        writer = csv.writer(output, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+        for col_num, column_title in enumerate(cols, 1):
+            row_csv.append(column_title)
+        writer.writerow(row_csv)
+        # идем по списку id сканов
+        i = 0
+        for item in response_dict:
+            i=+1
+            print(i)
+            #if(excel):
+            for id in item['mapData'].keys():
+                row = get_info(item['id'],id,cookies)
+                row_csv = []
+
         cookie_0b = res1.cookies[str_0b]
         #####################################################
         # готовим 2-й запрос, посылаем с получанными куками #
@@ -184,6 +294,23 @@ def getContent(military_unit, date_From, date_To):
 @cross_origin()
 async def read_root():
     return {"Hello": "World"}
+@app.get("/id/{id}")
+async def read_root(id: str = None):
+    #return FileResponse(some_file_path)
+    if(id is None):
+        html_content = """
+        <html>
+            <head>
+                <title>obd</title>
+            </head>
+            <body>
+                <h1>https://api-1945.herokuapp.com/id/123456789</h1>
+            </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
+    else:
+        return local_main1(id)
 
 #https://api-1945.herokuapp.com/items?documents&unit=147%20сд&de_from=555$d_to=4444
 @app.get("/items/{app_type}")
