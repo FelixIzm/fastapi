@@ -1,2 +1,2 @@
-web: uvicorn main:app --host 0.0.0.0 --port ${PORT:33500}
+web: uvicorn main:app --host 0.0.0.0 --port $PORT
 
